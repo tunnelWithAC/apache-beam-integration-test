@@ -10,7 +10,7 @@ from hamcrest.core.core.allof import all_of
 from nose.plugins.attrib import attr
 
 from apache_beam.io.gcp.tests import utils
-from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
+# from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
 from apache_beam.io.gcp.tests.pubsub_matcher import PubSubMessageMatcher
 from apache_beam.runners.runner import PipelineState
 from apache_beam.testing import test_utils
