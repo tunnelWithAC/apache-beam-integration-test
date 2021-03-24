@@ -1,34 +1,4 @@
-
-"""
-A basic PubSub to PubSub/BigQuery workflow.
-
-Run locally
-python porter.py \
-    --input_subscription "projects/conall-sandbox/subscriptions/wordcount-input-sub" \
-    --output_topic "projects/conall-sandbox/topics/wordcount-output" \
-    --bigquery_output "conall-sandbox:test.pipeline"
-
-Run on dataflow
-
-REGION=europe-west1
-BUCKET=word_count_example_test
-PROJECT=conall-sandbox
-
-python porter.py \
-  --region $REGION \
-  --input_subscription "projects/conall-sandbox/subscriptions/wordcount-input-sub" \
-  --output_topic "projects/conall-sandbox/topics/wordcount-output" \
-  --bigquery_output "conall-sandbox:test.pipeline" \
-  --runner DataflowRunner \
-  --project $PROJECT \
-  --temp_location gs://$BUCKET/tmp/ \
-  --job_name my-new-dataflow \
-  --enable-streaming-engine
-"""
-
-# pytype: skip-file
-
-# from __future__ import absolute_import
+from __future__ import absolute_import
 
 import argparse
 import logging

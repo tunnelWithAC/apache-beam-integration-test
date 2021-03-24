@@ -87,6 +87,3 @@ class TestIT(unittest.TestCase):
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     unittest.main()
-
-# TestDirectRunner
-# pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner --project=$PROJECT --region=europe-west1 --staging_location=gs://$BUCKET/staging --temp_location=gs://$BUCKET/temp job_name=it_test_pipeline --setup_file ./setup.py"

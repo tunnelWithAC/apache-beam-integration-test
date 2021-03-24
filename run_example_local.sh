@@ -1,1 +1,0 @@
-python -m apache_beam.examples.wordcount --output outputs
