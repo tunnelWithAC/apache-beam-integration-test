@@ -53,7 +53,6 @@ pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=
     --project=$PROJECT --region=europe-west1 \
     --staging_location=gs://$BUCKET/staging \
     --temp_location=gs://$BUCKET/temp \
-    --job_name=it_test_pipeline \
     --setup_file ./setup.py"
 ```
 
@@ -63,7 +62,7 @@ pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=
     --project=$PROJECT --region=europe-west1 \
     --staging_location=gs://$BUCKET/staging \
     --temp_location=gs://$BUCKET/temp \
-    --job_name=it_test_pipeline \
+    --job_name=it-test-pipeline \
     --setup_file ./setup.py"
 ```
 
