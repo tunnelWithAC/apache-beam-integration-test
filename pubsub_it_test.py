@@ -20,10 +20,13 @@ from apache_beam.testing.test_pipeline import TestPipeline
 import pipeline
 
 
-INPUT_TOPIC = 'wordcount-input'
-OUTPUT_TOPIC = 'wordcount-output'
-INPUT_SUB = 'wordcount-input-sub'
-OUTPUT_SUB = 'wordcount-output-sub'
+INPUT_TOPIC = 'wordcount-input-'
+OUTPUT_TOPIC = 'wordcount-output-'
+INPUT_SUB = 'wordcount-input-sub-'
+OUTPUT_SUB = 'wordcount-output-sub-'
+
+OUTPUT_DATASET = 'it_dataset'
+OUTPUT_TABLE_SESSIONS = 'pubsub'
 
 DEFAULT_INPUT_NUMBERS = 1
 WAIT_UNTIL_FINISH_DURATION = 12 * 60 * 1000  # in milliseconds
@@ -51,14 +54,23 @@ class TestIT(unittest.TestCase):
             self.sub_client.subscription_path(self.project, OUTPUT_SUB + self.uuid),
             self.output_topic.name,
             ack_deadline_seconds=60)
+
+        # Set up BigQuery tables
+        self.dataset_ref = utils.create_bq_dataset(self.project, self.OUTPUT_DATASET)
     
     def _inject_numbers(self, topic, num_messages):
         """Inject numbers as test data to PubSub."""
-        logging.debug('Injecting %d numbers to topic %s', num_messages, topic.name)
+        logging.info('Injecting %d numbers to topic %s', num_messages, topic.name)
         for n in range(num_messages):
             self.pub_client.publish(self.input_topic.name, str(n).encode('utf-8'))
 
-    def tearDown(self):
+    # def tearDown(self):
+    #     test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
+    #     test_utils.cleanup_topics(self.pub_client, [self.input_topic, self.output_topic])
+
+    def _cleanup_pubsub(self):
+        # test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub])
+        # test_utils.cleanup_topics(self.pub_client, [self.input_topic])
         test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
         test_utils.cleanup_topics(self.pub_client, [self.input_topic, self.output_topic])
   
@@ -83,6 +95,9 @@ class TestIT(unittest.TestCase):
         # Get pipeline options from command argument: --test-pipeline-options,
         # and start pipeline job by calling pipeline main function.
         pipeline.run(self.test_pipeline.get_full_options_as_args(**extra_opts))
+
+        # Cleanup PubSub
+        self.addCleanup(self._cleanup_pubsub)
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
