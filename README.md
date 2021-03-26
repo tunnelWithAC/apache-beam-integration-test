@@ -8,7 +8,7 @@ pip install --upgrade pip
 pip install --upgrade virtualenv
 pip install --upgrade setuptools
 
-virtualenv NWENV
+virtualenv ENV
 . ENV/bin/activate
 pip install apache-beam[gcp, test]
 ```
@@ -49,12 +49,21 @@ python pipeline.py \
 Run integration test using TestDirectRunner
 
 ```
-pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner --project=$PROJECT --region=europe-west1 --staging_location=gs://$BUCKET/staging --temp_location=gs://$BUCKET/temp job_name=it_test_pipeline --setup_file ./setup.py"
+pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner \
+    --project=$PROJECT --region=europe-west1 \
+    --staging_location=gs://$BUCKET/staging \
+    --temp_location=gs://$BUCKET/temp \
+    --setup_file ./setup.py"
 ```
 
 Run integration test using TestDataflowRunner
 ```
-pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner --project=$PROJECT --region=europe-west1 --staging_location=gs://$BUCKET/staging --temp_location=gs://$BUCKET/temp job_name=it_test_pipeline --setup_file ./setup.py"
+pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
+    --project=$PROJECT --region=europe-west1 \
+    --staging_location=gs://$BUCKET/staging \
+    --temp_location=gs://$BUCKET/temp \
+    --job_name=it-test-pipeline \
+    --setup_file ./setup.py"
 ```
 
 
