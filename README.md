@@ -35,21 +35,22 @@ python pipeline.py \
 Run pipeline using DataflowRunner
 
 ```
-python pipeline.py \
+python porter_main.py \
+  --setup_file ./setup.py \
   --region $REGION \
   --input_subscription "projects/$PROJECT/subscriptions/$INPUT_SUB" \
   --output_topic "projects/$PROJECT/topics/wordcount-output" \
   --runner DataflowRunner \
   --project $PROJECT \
   --temp_location gs://$BUCKET/tmp/ \
-  --job_name my-new-dataflow \
+  --job_name my-new-dataflow-again \
   --enable-streaming-engine
 ```
 
 Run integration test using TestDirectRunner
 
 ```
-pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner \
+pytest --log-cli-level=INFO porter/pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner \
     --project=$PROJECT --region=europe-west1 \
     --staging_location=gs://$BUCKET/staging \
     --temp_location=gs://$BUCKET/temp \
@@ -58,7 +59,7 @@ pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=
 
 Run integration test using TestDataflowRunner
 ```
-pytest --log-cli-level=INFO pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
+pytest --log-cli-level=INFO porter/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
     --project=$PROJECT --region=europe-west1 \
     --staging_location=gs://$BUCKET/staging \
     --temp_location=gs://$BUCKET/temp \

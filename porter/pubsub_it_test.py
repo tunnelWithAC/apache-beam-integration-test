@@ -17,7 +17,7 @@ from apache_beam.testing import test_utils
 from apache_beam.testing.pipeline_verifiers import PipelineStateMatcher
 from apache_beam.testing.test_pipeline import TestPipeline
 
-import pipeline
+from porter import pipeline
 
 
 INPUT_TOPIC = 'wordcount-input-'
@@ -29,7 +29,7 @@ OUTPUT_DATASET = 'it_dataset'
 OUTPUT_TABLE_SESSIONS = 'pubsub'
 
 DEFAULT_INPUT_NUMBERS = 1
-WAIT_UNTIL_FINISH_DURATION = 12 * 60 * 1000  # in milliseconds
+WAIT_UNTIL_FINISH_DURATION = 9 * 60 * 1000  # in milliseconds
 
 
 class TestIT(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestIT(unittest.TestCase):
             ack_deadline_seconds=60)
 
         # Set up BigQuery tables
-        self.dataset_ref = utils.create_bq_dataset(self.project, self.OUTPUT_DATASET)
+        # self.dataset_ref = utils.create_bq_dataset(self.project, self.OUTPUT_DATASET)
     
     def _inject_numbers(self, topic, num_messages):
         """Inject numbers as test data to PubSub."""
@@ -64,13 +64,7 @@ class TestIT(unittest.TestCase):
         for n in range(num_messages):
             self.pub_client.publish(self.input_topic.name, str(n).encode('utf-8'))
 
-    # def tearDown(self):
-    #     test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
-    #     test_utils.cleanup_topics(self.pub_client, [self.input_topic, self.output_topic])
-
     def _cleanup_pubsub(self):
-        # test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub])
-        # test_utils.cleanup_topics(self.pub_client, [self.input_topic])
         test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
         test_utils.cleanup_topics(self.pub_client, [self.input_topic, self.output_topic])
   
@@ -81,7 +75,7 @@ class TestIT(unittest.TestCase):
 
         # Set extra options to the pipeline for test purpose
         state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
-        pubsub_msg_verifier = PubSubMessageMatcher(self.project, self.output_sub.name, expected_msg, timeout=400)
+        pubsub_msg_verifier = PubSubMessageMatcher(self.project, self.output_sub.name, expected_msg, timeout=60 * 7) # in seconds
         extra_opts = {
             'input_subscription': self.input_sub.name,
             'output_topic': self.output_topic.name,
