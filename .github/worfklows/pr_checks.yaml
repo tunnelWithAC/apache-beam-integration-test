@@ -8,7 +8,7 @@ on:
       - master
 
 jobs:
-  build:
+  test_coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,3 +22,22 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests with pytest
         run: pytest --cov=porter tests
+  test_direct_runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests with pytest
+        run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
+            --project=$PROJECT --region=europe-west1 \
+            --staging_location=gs://$BUCKET/staging \
+            --temp_location=gs://$BUCKET/temp \
+            --job_name=it-test-pipeline \
+            --setup_file ./setup.py"
