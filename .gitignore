@@ -1,3 +1,6 @@
+.coverage
+.idea/
+**pycache**
 *ENV*/
 *env*/
 __pycache__/*
