@@ -6,10 +6,10 @@ on:
   pull_request:
     branches:
       - master
-
 env:
-  PROJECT: ADD_PROJECT_HERE
-  BUCKET: ADD_BUCKET_HERE
+    PROJECT: conall-sandbox 
+    BUCKET: integration-tests
+    SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
 
 jobs:
   test_direct_runner:
@@ -29,24 +29,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run tests with pytest
-        env:
-            PROJECT: ${{ secrets.BUCKET }}
-            BUCKET: ${{ secrets.PROJECT }}
-            SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
         run: echo "--runner=TestDataflowRunner \
-            --project=$PROJECT --region=europe-west1 \
-            --staging_location=gs://$BUCKET/staging \
-            --temp_location=gs://$BUCKET/temp \
+            --project=${{ env.PROJECT }} --region=europe-west1 \
+            --staging_location=gs://${{ env.BUCKET }}/staging \
+            --temp_location=gs://${{ env.BUCKET }}/temp \
             --job_name=it-test-pipeline \
             --setup_file ./setup.py"
       - name: Run tests with pytest
-        env:
-            PROJECT: conall-sandbox 
-            BUCKET: integration-tests
-            SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
         run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
-            --project=$PROJECT --region=europe-west1 \
-            --staging_location=gs://$BUCKET/staging \
-            --temp_location=gs://$BUCKET/temp \
+            --project=${{ env.PROJECT }} --region=europe-west1 \
+            --staging_location=gs://${{ env.BUCKET }}/staging \
+            --temp_location=gs://${{ env.BUCKET }}/temp \
             --job_name=it-test-pipeline \
             --setup_file ./setup.py"
