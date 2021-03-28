@@ -22,7 +22,7 @@ jobs:
           project_id: ${{ env.PROJECT }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-      - run: touch GOOGLE_APPLICATION_CREDENTIALS.json && echo -n ${{ secrets.GCP_SA_KEY }} | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS
+      - run: touch GOOGLE_APPLICATION_CREDENTIALS.json && echo -n ${{ secrets.GCP_SA_KEY }} | base64 --decode > GOOGLE_APPLICATION_CREDENTIALS.json
       - name: Install Python 3
         uses: actions/setup-python@v1
         with:
