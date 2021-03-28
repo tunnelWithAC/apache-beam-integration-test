@@ -7,7 +7,7 @@ on:
     branches:
       - master
 env:
-    BUCKET: integration-tests
+    BUCKET: word_count_example_test
     PROJECT: ${{ secrets.GCP_PROJECT }} 
     SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
 
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: google-github-actions/setup-gcloud@master # Set up ADC for credentials
         with:
-          project_id: ${{ env.PROJECT }}
+          project_id: ${{ secrets.GCP_PROJECT }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       - name: Install Python 3
@@ -31,7 +31,7 @@ jobs:
           pip install -r requirements.txt
       - name: Echo command
         run: echo "--runner=TestDataflowRunner \
-            --project=${{ env.PROJECT }} --region=europe-west1 \
+            --project=${{ secrets.GCP_PROJECT }} --region=europe-west1 \
             --staging_location=gs://${{ env.BUCKET }}/staging \
             --temp_location=gs://${{ env.BUCKET }}/temp \
             --job_name=it-test-pipeline \
@@ -39,6 +39,6 @@ jobs:
       - name: Test Script
         run: bash scripts/test.sh
       - name: Run tests with pytest
-        run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner --project=${{ env.PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"
+        run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner --project=${{ secrets.GCP_PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"
       - name: Run Test Script
         run: bash scripts/run_integration_test.sh
