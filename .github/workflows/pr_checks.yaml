@@ -7,8 +7,9 @@ on:
     branches:
       - master
 env:
-    PROJECT: conall-sandbox 
     BUCKET: integration-tests
+    GOOGLE_APPLICATION_CREDENTIALS: key.json
+    PROJECT: conall-sandbox 
     SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
 
 jobs:
