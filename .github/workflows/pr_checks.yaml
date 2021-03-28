@@ -41,7 +41,4 @@ jobs:
       - name: Run tests with pytest
         run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner --project=${{ env.PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"
       - name: Run Test Script
-        with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
         run: bash scripts/run_integration_test.sh
