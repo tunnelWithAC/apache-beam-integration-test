@@ -8,7 +8,7 @@ on:
       - master
 env:
     BUCKET: integration-tests
-    GOOGLE_APPLICATION_CREDENTIALS: key.json
+    GOOGLE_APPLICATION_CREDENTIALS: GOOGLE_APPLICATION_CREDENTIALS.json
     PROJECT: conall-sandbox 
     SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
 
@@ -22,7 +22,7 @@ jobs:
           project_id: ${{ env.PROJECT }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-      - run: echo -n ${{ secrets.GCP_SA_KEY }} | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS
+      - run: touch GOOGLE_APPLICATION_CREDENTIALS.json && echo -n ${{ secrets.GCP_SA_KEY }} | base64 --decode > $GOOGLE_APPLICATION_CREDENTIALS
       - name: Install Python 3
         uses: actions/setup-python@v1
         with:
