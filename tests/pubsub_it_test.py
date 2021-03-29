@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import logging
 import os
 import time
@@ -10,7 +11,8 @@ from hamcrest.core.core.allof import all_of
 from nose.plugins.attrib import attr
 
 from apache_beam.io.gcp.tests import utils
-# from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
+from apache_beam.io.gcp.bigquery_tools import BigQueryWrapper, parse_table_schema_from_json
+from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
 from apache_beam.io.gcp.tests.pubsub_matcher import PubSubMessageMatcher
 from apache_beam.runners.runner import PipelineState
 from apache_beam.testing import test_utils
@@ -26,7 +28,7 @@ INPUT_SUB = 'wordcount-input-sub-'
 OUTPUT_SUB = 'wordcount-output-sub-'
 
 OUTPUT_DATASET = 'it_dataset'
-OUTPUT_TABLE_SESSIONS = 'pubsub'
+OUTPUT_TABLE = 'pubsub'
 
 DEFAULT_INPUT_NUMBERS = 1
 WAIT_UNTIL_FINISH_DURATION = 9 * 60 * 1000  # in milliseconds
@@ -56,13 +58,25 @@ class TestIT(unittest.TestCase):
             ack_deadline_seconds=60)
 
         # Set up BigQuery tables
-        # self.dataset_ref = utils.create_bq_dataset(self.project, self.OUTPUT_DATASET)
+        self.dataset_ref = utils.create_bq_dataset(self.project, OUTPUT_DATASET)
+        self.bq_wrapper = BigQueryWrapper()
+        table_schema = parse_table_schema_from_json('{ "fields" : [{ "name":  "text", "type": "STRING", "mode": "NULLABLE" }] }')
+        self.table_ref = self.bq_wrapper.get_or_create_table(project_id=self.project, 
+                                                            dataset_id=self.dataset_ref.dataset_id,
+                                                            table_id=OUTPUT_TABLE,
+                                                            schema=table_schema,
+                                                            create_disposition='CREATE_IF_NEEDED',
+                                                            write_disposition='WRITE_APPEND')
     
     def _inject_numbers(self, topic, num_messages):
         """Inject numbers as test data to PubSub."""
-        logging.info('Injecting %d numbers to topic %s', num_messages, topic.name)
+        
         for n in range(num_messages):
-            self.pub_client.publish(self.input_topic.name, str(n).encode('utf-8'))
+            user = { 'name': f'conall_{n}' }
+            user_str = json.dumps(user)
+
+            logging.info(f'Injecting {user_str} to topic {topic.name}')
+            self.pub_client.publish(self.input_topic.name, user_str.encode('utf-8'))
 
     def _cleanup_pubsub(self):
         test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
@@ -71,12 +85,19 @@ class TestIT(unittest.TestCase):
     @attr('IT')
     def test_pubsub_pipe_it(self):
         # Build expected dataset.
-        expected_msg = [('%d' % num).encode('utf-8') for num in range(DEFAULT_INPUT_NUMBERS)]
+        expected_msg = [ json.dumps({ 'name': 'conall_0' }).encode('utf-8') ]
 
         # Set extra options to the pipeline for test purpose
         state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
         pubsub_msg_verifier = PubSubMessageMatcher(self.project, self.output_sub.name, expected_msg, timeout=60 * 7) # in seconds
+
+        EXPECTED_BQ_CHECKSUM = 'd5ZNwKmI+9SxV2nG/k2xVVLOBI4=' # SELECT SHA1(text) FROM `<project>.<dataset>.<table>`
+        validation_query = f'SELECT text FROM `{self.project}.{self.dataset_ref.dataset_id}.{OUTPUT_TABLE}`'
+        bq_sessions_verifier = BigqueryMatcher(self.project, validation_query, EXPECTED_BQ_CHECKSUM)
+
         extra_opts = {
+            'bigquery_dataset': self.dataset_ref.dataset_id,
+            'bigquery_table': OUTPUT_TABLE,
             'input_subscription': self.input_sub.name,
             'output_topic': self.output_topic.name,
             'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
@@ -92,6 +113,8 @@ class TestIT(unittest.TestCase):
 
         # Cleanup PubSub
         self.addCleanup(self._cleanup_pubsub)
+        self.addCleanup(utils.delete_bq_dataset, self.project, self.dataset_ref)
+
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
