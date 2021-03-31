@@ -8,6 +8,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 
+from transforms.parse import Parse
 
 def run(argv=None):
   """Build and run the pipeline."""
@@ -23,20 +24,23 @@ def run(argv=None):
 
   with beam.Pipeline(options=pipeline_options) as p:
     # Read from PubSub into a PCollection.
-    messages = (
-        p |
-        beam.io.ReadFromPubSub(subscription=known_args.input_subscription).
-        with_output_types(bytes)
+    messages = (p 
+      | beam.io.ReadFromPubSub(subscription=known_args.input_subscription, 
+                               timestamp_attribute='timestamp'
+                              ).with_output_types(bytes)
+      | Parse()
     )
 
-    lines = messages | 'decode' >> beam.Map(lambda x: x.decode('utf-8'))
+    # lines = (messages >> Parse()) 
+
+    # lines = messages | 'decode' >> beam.Map(lambda x: x.decode('utf-8'))
 
     # def format_pubsub(msg):
     #     logging.info(f'Format PubSub: {msg}')
     #     return str(msg)
 
     output = (
-        lines
+        messages
         | 'encode' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes))
 
     output | beam.io.WriteToPubSub(known_args.output_topic)
@@ -46,7 +50,7 @@ def run(argv=None):
         logging.info(f'Format BQ: {m}')
         return m
 
-    (lines
+    (messages
         | 'BQ Format' >> beam.Map(format_bq)
         | 'Write to BQ' >> beam.io.WriteToBigQuery(
                             table=known_args.bigquery_table,

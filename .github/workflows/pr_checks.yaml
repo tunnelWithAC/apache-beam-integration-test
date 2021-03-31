@@ -30,4 +30,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run tests with pytest
+        run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner --project=${{ secrets.GCP_PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"
+test_dataflow_runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: google-github-actions/setup-gcloud@master # Set up ADC for credentials
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests with pytest
         run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner --project=${{ secrets.GCP_PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"

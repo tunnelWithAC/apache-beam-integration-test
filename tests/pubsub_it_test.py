@@ -12,6 +12,7 @@ from nose.plugins.attrib import attr
 
 from apache_beam.io.gcp.tests import utils
 from apache_beam.io.gcp.bigquery_tools import BigQueryWrapper, parse_table_schema_from_json
+from apache_beam.io.gcp.pubsub import PubsubMessage
 from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
 from apache_beam.io.gcp.tests.pubsub_matcher import PubSubMessageMatcher
 from apache_beam.runners.runner import PipelineState
@@ -19,7 +20,7 @@ from apache_beam.testing import test_utils
 from apache_beam.testing.pipeline_verifiers import PipelineStateMatcher
 from apache_beam.testing.test_pipeline import TestPipeline
 
-from porter import pipeline
+from porter import pipeline, schemas
 
 
 INPUT_TOPIC = 'wordcount-input-'
@@ -60,13 +61,19 @@ class TestIT(unittest.TestCase):
         # Set up BigQuery tables
         self.dataset_ref = utils.create_bq_dataset(self.project, OUTPUT_DATASET)
         self.bq_wrapper = BigQueryWrapper()
-        table_schema = parse_table_schema_from_json('{ "fields" : [{ "name":  "text", "type": "STRING", "mode": "NULLABLE" }] }')
-        self.table_ref = self.bq_wrapper.get_or_create_table(project_id=self.project, 
-                                                            dataset_id=self.dataset_ref.dataset_id,
-                                                            table_id=OUTPUT_TABLE,
-                                                            schema=table_schema,
-                                                            create_disposition='CREATE_IF_NEEDED',
-                                                            write_disposition='WRITE_APPEND')
+        table_schema = parse_table_schema_from_json(schemas.get_test_schema())
+
+        def _create_table(table_id, schema):
+            return self.bq_wrapper.get_or_create_table(project_id=self.project, 
+                                                        dataset_id=self.dataset_ref.dataset_id,
+                                                        table_id=table_id,
+                                                        schema=schema,
+                                                        create_disposition='CREATE_IF_NEEDED',
+                                                        write_disposition='WRITE_APPEND')
+
+
+        self.table_ref = _create_table(OUTPUT_TABLE, table_schema)
+
     
     def _inject_numbers(self, topic, num_messages):
         """Inject numbers as test data to PubSub."""
@@ -76,7 +83,12 @@ class TestIT(unittest.TestCase):
             user_str = json.dumps(user)
 
             logging.info(f'Injecting {user_str} to topic {topic.name}')
-            self.pub_client.publish(self.input_topic.name, user_str.encode('utf-8'))
+
+            msg = PubsubMessage(
+                b'{"name": "conall_0"}', 
+                { 'timestamp': '2020-12-15T15:53:04.000' }
+            )
+            self.pub_client.publish(self.input_topic.name, msg.data, **msg.attributes)
 
     def _cleanup_pubsub(self):
         test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
