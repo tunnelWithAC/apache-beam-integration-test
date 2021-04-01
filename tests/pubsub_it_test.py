@@ -82,11 +82,11 @@ class TestIT(unittest.TestCase):
             user = { 'name': f'conall_{n}' }
             user_str = json.dumps(user)
 
-            logging.info(f'Injecting {user_str} to topic {topic.name}')
+            # logging.info(f'Injecting {user_str} to topic {topic.name}')
 
             msg = PubsubMessage(
-                b'{"name": "conall_0"}', 
-                { 'timestamp': '2020-12-15T15:53:04.000' }
+                b'conall_0', 
+                { 'timestamp': '1608051184000' }
             )
             self.pub_client.publish(self.input_topic.name, msg.data, **msg.attributes)
 
@@ -97,7 +97,7 @@ class TestIT(unittest.TestCase):
     @attr('IT')
     def test_pubsub_pipe_it(self):
         # Build expected dataset.
-        expected_msg = [ json.dumps({ 'name': 'conall_0' }).encode('utf-8') ]
+        expected_msg = [ 'conall_0 - 1608051184'.encode('utf-8') ]
 
         # Set extra options to the pipeline for test purpose
         state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
@@ -106,6 +106,7 @@ class TestIT(unittest.TestCase):
         EXPECTED_BQ_CHECKSUM = 'da39a3ee5e6b4b0d3255bfef95601890afd80709' # SELECT SHA1(text) FROM `<project>.<dataset>.<table>`
         validation_query = f'SELECT text FROM `{self.project}.{self.dataset_ref.dataset_id}.{OUTPUT_TABLE}`'
         bq_sessions_verifier = BigqueryMatcher(self.project, validation_query, EXPECTED_BQ_CHECKSUM)
+        # bq_sessions_verifier
 
         extra_opts = {
             'bigquery_dataset': self.dataset_ref.dataset_id,
@@ -113,7 +114,7 @@ class TestIT(unittest.TestCase):
             'input_subscription': self.input_sub.name,
             'output_topic': self.output_topic.name,
             'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
-            'on_success_matcher': all_of(state_verifier, bq_sessions_verifier, pubsub_msg_verifier)
+            'on_success_matcher': all_of(state_verifier, pubsub_msg_verifier)
         }
 
         # Generate input data and inject to PubSub.
