@@ -8,7 +8,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 
-from transforms.parse import Parse
+# from porter.transforms import parse
 
 def run(argv=None):
   """Build and run the pipeline."""
@@ -28,19 +28,19 @@ def run(argv=None):
       | beam.io.ReadFromPubSub(subscription=known_args.input_subscription, 
                                timestamp_attribute='timestamp'
                               ).with_output_types(bytes)
-      | Parse()
+      # | parse.Parse()
     )
 
     # lines = (messages >> Parse()) 
 
-    # lines = messages | 'decode' >> beam.Map(lambda x: x.decode('utf-8'))
+    lines = messages | 'decode' >> beam.Map(lambda x: x.decode('utf-8'))
 
     # def format_pubsub(msg):
     #     logging.info(f'Format PubSub: {msg}')
     #     return str(msg)
 
     output = (
-        messages
+        lines
         | 'encode' >> beam.Map(lambda x: x.encode('utf-8')).with_output_types(bytes))
 
     output | beam.io.WriteToPubSub(known_args.output_topic)

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+# from __future__ import absolute_import
 
 import json
 import logging
@@ -103,7 +103,7 @@ class TestIT(unittest.TestCase):
         state_verifier = PipelineStateMatcher(PipelineState.RUNNING)
         pubsub_msg_verifier = PubSubMessageMatcher(self.project, self.output_sub.name, expected_msg, timeout=60 * 7) # in seconds
 
-        EXPECTED_BQ_CHECKSUM = 'd5ZNwKmI+9SxV2nG/k2xVVLOBI4=' # SELECT SHA1(text) FROM `<project>.<dataset>.<table>`
+        EXPECTED_BQ_CHECKSUM = 'da39a3ee5e6b4b0d3255bfef95601890afd80709' # SELECT SHA1(text) FROM `<project>.<dataset>.<table>`
         validation_query = f'SELECT text FROM `{self.project}.{self.dataset_ref.dataset_id}.{OUTPUT_TABLE}`'
         bq_sessions_verifier = BigqueryMatcher(self.project, validation_query, EXPECTED_BQ_CHECKSUM)
 
@@ -113,7 +113,7 @@ class TestIT(unittest.TestCase):
             'input_subscription': self.input_sub.name,
             'output_topic': self.output_topic.name,
             'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
-            'on_success_matcher': all_of(state_verifier, pubsub_msg_verifier)
+            'on_success_matcher': all_of(state_verifier, bq_sessions_verifier, pubsub_msg_verifier)
         }
 
         # Generate input data and inject to PubSub.
