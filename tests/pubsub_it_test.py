@@ -110,10 +110,10 @@ class TestIT(unittest.TestCase):
         # make sure you put the expected result in a tuple with a trailing comma
         expected_bq_msg = [('conall_0 - 1608051184',)]
         # Fetch Bigquery data with given query, compare to the expected data.
-        bigquery_verifier = BigqueryFullResultMatcher(
-            project=self.project,
-            query=validation_query,
-            data=expected_bq_msg)
+        # bigquery_verifier = BigqueryFullResultMatcher(
+        #     project=self.project,
+        #     query=validation_query,
+        #     data=expected_bq_msg)
 
         # Fetch Bigquery data with given query, compare to the expected data.
         # This matcher polls BigQuery until the no. of records in BigQuery is
@@ -132,7 +132,7 @@ class TestIT(unittest.TestCase):
             'output_topic': self.output_topic.name,
             'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
             'on_success_matcher':
-                all_of(bigquery_verifier, bigquery_streaming_verifier, state_verifier, pubsub_msg_verifier)
+                all_of(bigquery_streaming_verifier, state_verifier, pubsub_msg_verifier) # bigquery_verifier
         }
 
         # Generate input data and inject to PubSub.
