@@ -2,7 +2,7 @@
 
 import logging
 
-from porter import pipeline
+from pubsub_to_bq import pipeline
 
 if __name__ == '__main__':
   logging.getLogger().setLevel(logging.INFO)

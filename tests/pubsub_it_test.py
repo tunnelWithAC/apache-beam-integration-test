@@ -13,14 +13,14 @@ from nose.plugins.attrib import attr
 from apache_beam.io.gcp.tests import utils
 from apache_beam.io.gcp.bigquery_tools import BigQueryWrapper, parse_table_schema_from_json
 from apache_beam.io.gcp.pubsub import PubsubMessage
-from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryMatcher
+from apache_beam.io.gcp.tests.bigquery_matcher import BigqueryFullResultMatcher, BigqueryFullResultStreamingMatcher, BigqueryMatcher
 from apache_beam.io.gcp.tests.pubsub_matcher import PubSubMessageMatcher
 from apache_beam.runners.runner import PipelineState
 from apache_beam.testing import test_utils
 from apache_beam.testing.pipeline_verifiers import PipelineStateMatcher
 from apache_beam.testing.test_pipeline import TestPipeline
 
-from porter import pipeline, schemas
+from pubsub_to_bq import pipeline, schemas
 
 
 INPUT_TOPIC = 'wordcount-input-'
@@ -106,7 +106,24 @@ class TestIT(unittest.TestCase):
         EXPECTED_BQ_CHECKSUM = 'da39a3ee5e6b4b0d3255bfef95601890afd80709' # SELECT SHA1(text) FROM `<project>.<dataset>.<table>`
         validation_query = f'SELECT text FROM `{self.project}.{self.dataset_ref.dataset_id}.{OUTPUT_TABLE}`'
         bq_sessions_verifier = BigqueryMatcher(self.project, validation_query, EXPECTED_BQ_CHECKSUM)
-        # bq_sessions_verifier
+
+        # make sure you put the expected result in a tuple with a trailing comma
+        expected_bq_msg = [('conall_0 - 1608051184',)]
+        # Fetch Bigquery data with given query, compare to the expected data.
+        bigquery_verifier = BigqueryFullResultMatcher(
+            project=self.project,
+            query=validation_query,
+            data=expected_bq_msg)
+
+        # Fetch Bigquery data with given query, compare to the expected data.
+        # This matcher polls BigQuery until the no. of records in BigQuery is
+        # equal to the no. of records in expected data.
+        # Specifying a timeout is optional
+        bigquery_streaming_verifier = BigqueryFullResultStreamingMatcher(
+            project=self.project,
+            query=validation_query,
+            data=expected_bq_msg,
+            timeout=60 * 7)
 
         extra_opts = {
             'bigquery_dataset': self.dataset_ref.dataset_id,
@@ -114,7 +131,8 @@ class TestIT(unittest.TestCase):
             'input_subscription': self.input_sub.name,
             'output_topic': self.output_topic.name,
             'wait_until_finish_duration': WAIT_UNTIL_FINISH_DURATION,
-            'on_success_matcher': all_of(state_verifier, pubsub_msg_verifier)
+            'on_success_matcher':
+                all_of(bigquery_verifier, bigquery_streaming_verifier, state_verifier, pubsub_msg_verifier)
         }
 
         # Generate input data and inject to PubSub.
