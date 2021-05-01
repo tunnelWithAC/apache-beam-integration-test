@@ -9,22 +9,8 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 
+from transforms.parse import Parse
 
-class Parse(PTransform):
-
-    def expand(self, pcoll):
-        import logging
-        return pcoll | "Parse" >> beam.Map(self.parse_fields)
-    
-    def parse_fields(self, element, created_timestamp=DoFn.TimestampParam):
-        from datetime import datetime
-        import logging
-        parsed_element = element.decode('utf-8')
-        created_datetime = datetime.utcfromtimestamp(float(created_timestamp))
-        logging.info(f'timestamp: {int(created_timestamp)} \nelement: {parsed_element}')
-        return f'{parsed_element} - {int(created_timestamp)}'
-
-# from porter.transforms import parse
 
 def run(argv=None):
   """Build and run the pipeline."""
