@@ -46,7 +46,7 @@ class TestIT(unittest.TestCase):
         from google.cloud import pubsub
         self.pub_client = pubsub.PublisherClient()
         self.pubsub_setup_client = PubSubSetupClient(project=self.project)
-        
+
         self.input_topic = self.pubsub_setup_client.create_topic(INPUT_TOPIC)
         self.output_topic = self.pubsub_setup_client.create_topic(OUTPUT_TOPIC)
 
