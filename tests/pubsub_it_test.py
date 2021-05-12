@@ -22,6 +22,8 @@ from apache_beam.testing.test_pipeline import TestPipeline
 
 from pubsub_to_bq import pipeline, schemas
 
+from utils.create_pubsub import PubSubSetupClient
+
 
 INPUT_TOPIC = 'wordcount-input-'
 OUTPUT_TOPIC = 'wordcount-output-'
@@ -32,31 +34,24 @@ OUTPUT_DATASET = 'it_dataset'
 OUTPUT_TABLE = 'pubsub'
 
 DEFAULT_INPUT_NUMBERS = 1
-WAIT_UNTIL_FINISH_DURATION = 9 * 60 * 1000  # in milliseconds
+WAIT_UNTIL_FINISH_DURATION = 6 * 60 * 1000  # in milliseconds
 
 
 class TestIT(unittest.TestCase):
     def setUp(self):
         self.test_pipeline = TestPipeline(is_integration_test=True)
         self.project = self.test_pipeline.get_option('project')
-        self.uuid = str(uuid.uuid4())
 
         # Set up PubSub environment.
         from google.cloud import pubsub
         self.pub_client = pubsub.PublisherClient()
-        self.input_topic = self.pub_client.create_topic(
-            self.pub_client.topic_path(self.project, INPUT_TOPIC + self.uuid))
-        self.output_topic = self.pub_client.create_topic(
-            self.pub_client.topic_path(self.project, OUTPUT_TOPIC + self.uuid))
+        self.pubsub_setup_client = PubSubSetupClient(project=self.project)
+        
+        self.input_topic = self.pubsub_setup_client.create_topic(INPUT_TOPIC)
+        self.output_topic = self.pubsub_setup_client.create_topic(OUTPUT_TOPIC)
 
-        self.sub_client = pubsub.SubscriberClient()
-        self.input_sub = self.sub_client.create_subscription(
-            self.sub_client.subscription_path(self.project, INPUT_SUB + self.uuid),
-            self.input_topic.name)
-        self.output_sub = self.sub_client.create_subscription(
-            self.sub_client.subscription_path(self.project, OUTPUT_SUB + self.uuid),
-            self.output_topic.name,
-            ack_deadline_seconds=60)
+        self.input_sub = self.pubsub_setup_client.create_subscription(self.input_topic, INPUT_SUB)
+        self.output_sub = self.pubsub_setup_client.create_subscription(self.output_topic, OUTPUT_SUB)
 
         # Set up BigQuery tables
         self.dataset_ref = utils.create_bq_dataset(self.project, OUTPUT_DATASET)
@@ -91,8 +86,8 @@ class TestIT(unittest.TestCase):
             self.pub_client.publish(self.input_topic.name, msg.data, **msg.attributes)
 
     def _cleanup_pubsub(self):
-        test_utils.cleanup_subscriptions(self.sub_client, [self.input_sub, self.output_sub])
-        test_utils.cleanup_topics(self.pub_client, [self.input_topic, self.output_topic])
+        test_utils.cleanup_subscriptions(self.pubsub_setup_client.sub_client, [self.input_sub, self.output_sub])
+        test_utils.cleanup_topics(self.pubsub_setup_client.pub_client, [self.input_topic, self.output_topic])
   
     @attr('IT')
     def test_pubsub_pipe_it(self):

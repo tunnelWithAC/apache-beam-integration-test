@@ -4,5 +4,5 @@
 *ENV*/
 *env*/
 __pycache__/*
-porter.egg-info/
+*.egg-info/
 setup.sh

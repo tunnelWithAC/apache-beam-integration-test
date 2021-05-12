@@ -40,7 +40,7 @@ python main.py \
 Run pipeline using DataflowRunner
 
 ```
-python porter_main.py \
+python main.py \
   --setup_file ./setup.py \
   --region $REGION \
   --input_subscription "projects/$PROJECT/subscriptions/$INPUT_SUB" \
@@ -65,7 +65,8 @@ pytest --log-cli-level=INFO tests/pubsub_it_test.py \
 
 Run integration test using TestDataflowRunner
 ```
-pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDataflowRunner \
+pytest --log-cli-level=INFO tests/pubsub_it_test.py \
+  --test-pipeline-options="--runner=TestDataflowRunner \
   --project=$PROJECT --region=europe-west1 \
   --staging_location=gs://$BUCKET/staging \
   --temp_location=gs://$BUCKET/temp \

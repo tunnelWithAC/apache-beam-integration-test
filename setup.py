@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-   name='porter',
+   name='pubsub_to_bq',
    version='1',
    install_requires=[],
    packages=setuptools.find_packages(),
