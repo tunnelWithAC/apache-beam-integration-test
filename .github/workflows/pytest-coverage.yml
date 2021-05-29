@@ -19,6 +19,6 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build coverage file
       run: |
-        pytest --cache-clear --cov=pubsub_to_bq tests/ > pytest-coverage.txt
+        pytest --cache-clear --cov=pubsub_to_bq tests/ --cov-fail-under=80
     - name: Comment coverage
       uses: coroo/pytest-coverage-commentator@v1.0.2
