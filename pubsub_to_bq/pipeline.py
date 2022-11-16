@@ -4,9 +4,7 @@ import argparse
 import logging
 
 import apache_beam as beam
-from apache_beam import DoFn, PTransform
 from apache_beam.options.pipeline_options import PipelineOptions
-from apache_beam.options.pipeline_options import SetupOptions
 from apache_beam.options.pipeline_options import StandardOptions
 
 from transforms.parse import Parse
@@ -32,14 +30,6 @@ def run(argv=None):
                               ).with_output_types(bytes)
       | Parse()
     )
-
-    # lines = (messages >> Parse()) 
-
-    # lines = messages | 'decode' >> beam.Map(lambda x: x.decode('utf-8'))
-
-    # def format_pubsub(msg):
-    #     logging.info(f'Format PubSub: {msg}')
-    #     return str(msg)
 
     output = (
         lines
