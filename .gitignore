@@ -1,6 +1,7 @@
 .coverage
 .idea/
 **pycache**
+**.pytest_cache**
 *ENV*/
 *env*/
 __pycache__/*
