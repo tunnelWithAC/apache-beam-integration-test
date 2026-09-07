@@ -2,7 +2,7 @@
 
 This repo contains example code for an Apache Beam pipeline that reads from Google Cloud PubSub and writes to another PubSub topic as well as a BigQuery table.
 
-There are also examples of unit tests in the `tests/transforms` directory and an integration test in the `tests/pipeline_it_test.py` file.
+There are also examples of unit tests in the `tests/transforms` directory and an integration test in the `tests/pubsub_it_test.py` file.
 
 This pipeline is taken from when I first learned how to write Apache Beam integration tests back in January 2020 and was heavily driven by [this question on Stackoverflow](https://stackoverflow.com/questions/66695171/how-do-i-run-apache-beam-integration-tests).
 
@@ -11,18 +11,15 @@ THe `.github/workflows/pr_checks.yaml` file shows you how to run tests as part o
 
 
 ### Installation Steps
-Create virtual environment
+
+This project uses [uv](https://docs.astral.sh/uv/). Install it, then run:
 
 ```
-pip install --upgrade pip
-pip install --upgrade virtualenv
-pip install --upgrade setuptools
-
-virtualenv ENV
-. ENV/bin/activate
-# pip install apache-beam[gcp, test]
-pip install -r requirements.txt
+uv sync
 ```
+
+That creates `.venv`, installs Python 3.12 if it isn't already present, and installs
+everything from the committed `uv.lock`. Prefix commands with `uv run` to use it.
 
 Set environment variables
 ```
@@ -40,7 +37,7 @@ REGION=europe-west1
 Run pipeline using DirectRunner
 
 ```
-python main.py \
+uv run python main.py \
   --bigquery_dataset="$BIGQUERY_DATASET" \
   --bigquery_table="$BIGQUERY_TABLE" \
   --input_subscription "projects/$PROJECT/subscriptions/$INPUT_SUB" \
@@ -50,8 +47,8 @@ python main.py \
 Run pipeline using DataflowRunner
 
 ```
-python main.py \
-  --setup_file ./setup.py \
+uv run python main.py \
+  --setup_file ./pyproject.toml \
   --region $REGION \
   --input_subscription "projects/$PROJECT/subscriptions/$INPUT_SUB" \
   --output_topic "projects/$PROJECT/topics/wordcount-output" \
@@ -62,26 +59,37 @@ python main.py \
   --enable-streaming-engine
 ```
 
+### Run tests
+
+Unit tests need no GCP access:
+
+```
+uv run pytest
+```
+
+Integration tests are marked `it` and deselected by default, since they need a live
+GCP project. Opt into them with `-m it`.
+
 Run integration test using TestDirectRunner
 
 ```
-pytest --log-cli-level=INFO tests/pubsub_it_test.py \
+uv run pytest -m it --log-cli-level=INFO tests/pubsub_it_test.py \
   --test-pipeline-options="--runner=TestDirectRunner \
   --project=$PROJECT --region=europe-west1 \
   --staging_location=gs://$BUCKET/staging \
   --temp_location=gs://$BUCKET/temp \
-  --setup_file ./setup.py"
+  --setup_file ./pyproject.toml"
 ```
 
 Run integration test using TestDataflowRunner
 ```
-pytest --log-cli-level=INFO tests/pubsub_it_test.py \
+uv run pytest -m it --log-cli-level=INFO tests/pubsub_it_test.py \
   --test-pipeline-options="--runner=TestDataflowRunner \
   --project=$PROJECT --region=europe-west1 \
   --staging_location=gs://$BUCKET/staging \
   --temp_location=gs://$BUCKET/temp \
   --job_name=it-test-pipeline \
-  --setup_file ./setup.py"
+  --setup_file ./pyproject.toml"
 ```
 
 ## Testing Notes
@@ -175,8 +183,8 @@ In order to get the TestDataflowRunner working you need to use the following pro
 
 ```
 main.py
-setup.py
-requirements.txt
+pyproject.toml
+uv.lock
 transforms/
 tests/pubsub_it_test.py
 pubsub_to_bq/
@@ -184,13 +192,13 @@ pubsub_to_bq/
 
 The integration test can be ran using PyTest and the following command
 ```
-pytest --log-cli-level=INFO tests/pubsub_it_test.py \
+uv run pytest -m it --log-cli-level=INFO tests/pubsub_it_test.py \
   --test-pipeline-options="--runner=TestDataflowRunner \
   --project=$PROJECT --region=europe-west1 \
   --staging_location=gs://$BUCKET/staging \
   --temp_location=gs://$BUCKET/temp \
   --job_name=it-test-pipeline \
-  --setup_file ./setup.py"
+  --setup_file ./pyproject.toml"
 ```
 
 ##### You will need to inject mock data into your pipeline
