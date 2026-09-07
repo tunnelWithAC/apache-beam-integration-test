@@ -1,0 +1,38 @@
+[project]
+name = "pubsub-to-bq"
+version = "1.0.0"
+description = "Example Apache Beam pipeline and integration tests: Pub/Sub -> BigQuery"
+requires-python = ">=3.12,<3.13"
+# Intentionally empty. This file is the --setup_file passed to Dataflow, and the sdist
+# built from it is pip-installed on workers that already have Beam preinstalled.
+# Declaring apache-beam here would make workers reinstall it. Development dependencies
+# live in the dev dependency group below, which never reaches package metadata.
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Listed explicitly: this is a flat layout with a top-level __init__.py, which
+# setuptools auto-discovery cannot resolve unambiguously.
+packages = ["pubsub_to_bq", "transforms", "utils"]
+
+[dependency-groups]
+dev = [
+    "apache-beam[gcp]==2.76.0",
+    "pytest>=8.3,<10",
+    "pytest-cov>=6",
+    "pyhamcrest>=2.1",
+    # Beam's stager builds the Dataflow sdist with `python -m build --no-isolation`,
+    # so both must be present in the launch environment. uv does not seed venvs with
+    # setuptools the way virtualenv does.
+    "build>=1.2",
+    "setuptools>=77",
+]
+
+[tool.pytest.ini_options]
+# pytest's default is test_*.py only, which matches neither of this repo's test files.
+python_files = ["test_*.py", "*_test.py"]
+markers = ["it: integration test requiring a live GCP project"]
+addopts = ["-m", "not it"]

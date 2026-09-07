@@ -8,45 +8,46 @@ on:
       - master
 env:
     BUCKET: word_count_example_test
-    PROJECT: ${{ secrets.GCP_PROJECT }} 
-    SERVICE_ACCOUNT: ${{ secrets.GCP_SA_KEY }}
+    PROJECT: ${{ secrets.GCP_PROJECT }}
 
 jobs:
   test_direct_runner:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: google-github-actions/setup-gcloud@master # Set up ADC for credentials
+      - uses: actions/checkout@v7
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v3
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-      - name: Install Python 3
-        uses: actions/setup-python@v1
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: 3.7
+          enable-cache: true
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests with pytest
-        run: pytest --log-cli-level=INFO tests/pubsub_it_test.py --test-pipeline-options="--runner=TestDirectRunner --project=${{ secrets.GCP_PROJECT }} --region=europe-west1 --staging_location=gs://${{ env.BUCKET }}/staging --temp_location=gs://${{ env.BUCKET }}/temp --job_name=it-test-pipeline --setup_file ./setup.py"
+        run: uv sync --locked
+      - name: Run integration test with TestDirectRunner
+        run: >
+          uv run pytest -m it --log-cli-level=INFO tests/pubsub_it_test.py
+          --test-pipeline-options="--runner=TestDirectRunner
+          --project=${{ secrets.GCP_PROJECT }} --region=europe-west1
+          --staging_location=gs://${{ env.BUCKET }}/staging
+          --temp_location=gs://${{ env.BUCKET }}/temp
+          --job_name=it-test-pipeline --setup_file ./pyproject.toml"
   test_dataflow_runner:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: google-github-actions/setup-gcloud@master # Set up ADC for credentials
+      - uses: actions/checkout@v7
+      - uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v3
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-      - name: Install Python 3
-        uses: actions/setup-python@v1
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
-          python-version: 3.7
+          enable-cache: true
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run tests with pytest
+        run: uv sync --locked
+      - name: Run integration test with TestDataflowRunner
         run: bash scripts/run_integration_test.sh
