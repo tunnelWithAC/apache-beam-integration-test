@@ -1,25 +1,21 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
 name: Check Test Coverage
 
 on:
   push
 
 jobs:
-  deploy:
+  test:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Python 3
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v7
+    - uses: astral-sh/setup-uv@v10
       with:
-        python-version: 3.7
+        enable-cache: true
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run tests with pytest
-      run: pytest --cov=porter tests
+      run: uv sync --locked
+    - name: Run unit tests with coverage
+      run: >
+        uv run pytest --cov=transforms --cov=pubsub_to_bq
+        --cov-report=term-missing tests/transforms
