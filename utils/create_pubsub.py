@@ -13,10 +13,11 @@ class PubSubSetupClient():
 
     def create_topic(self, topic):
         return self.pub_client.create_topic(
-            self.pub_client.topic_path(self.project, topic + self.uuid))
+            name=self.pub_client.topic_path(self.project, topic + self.uuid))
 
     def create_subscription(self, topic, subscription):
         return self.sub_client.create_subscription(
-            self.sub_client.subscription_path(self.project, subscription + self.uuid),
-            topic.name)
+            name=self.sub_client.subscription_path(
+                self.project, subscription + self.uuid),
+            topic=topic.name)
 
