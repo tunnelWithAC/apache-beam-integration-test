@@ -2,13 +2,10 @@
 
 import json
 import logging
-import os
-import time
 import unittest
-import uuid
 
+import pytest
 from hamcrest.core.core.allof import all_of
-from nose.plugins.attrib import attr
 
 from apache_beam.io.gcp.tests import utils
 from apache_beam.io.gcp.bigquery_tools import BigQueryWrapper, parse_table_schema_from_json
@@ -89,7 +86,7 @@ class TestIT(unittest.TestCase):
         test_utils.cleanup_subscriptions(self.pubsub_setup_client.sub_client, [self.input_sub, self.output_sub])
         test_utils.cleanup_topics(self.pubsub_setup_client.pub_client, [self.input_topic, self.output_topic])
   
-    @attr('IT')
+    @pytest.mark.it
     def test_pubsub_pipe_it(self):
         # Build expected dataset.
         expected_msg = [ 'conall_0 - 1608051184'.encode('utf-8') ]
