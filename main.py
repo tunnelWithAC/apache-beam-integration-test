@@ -1,5 +1,3 @@
-# from __future__ import absolute_import
-
 import logging
 
 from pubsub_to_bq import pipeline
